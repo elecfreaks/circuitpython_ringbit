@@ -15,6 +15,7 @@ import analogio
 import microcontroller
 import pwmio
 import pulseio
+import neopixel
 from adafruit_motor import servo
 
 
@@ -34,6 +35,7 @@ class Ringbit():
         self._right_pin = pwmio.PWMOut(right_pin, frequency=50, duty_cycle=0)
         self._left_servo = servo.ContinuousServo(self._left_pin)
         self._right_pin = servo.ContinuousServo(self._right_pin)
+        self._rainbow_leds = None
 
     def set_speed(self, left_speed: int, right_speed: int):
         """Set the Ring:bit Car speed"""
@@ -42,6 +44,30 @@ class Ringbit():
             raise ValueError('speed error, -100~100')
         self._left_servo.throttle = left_speed / 100
         self._right_pin.throttle = - right_speed / 100
+
+    @property
+    def rainbow_leds(self):
+        """Access rainbow_leds instance"""
+        if self._rainbow_leds is None:
+            raise AttributeError("rainbow_leds not initialized, " +
+                                 "call init_rainbow_leds to initialize.")
+        return self._rainbow_leds
+
+    def init_rainbow_leds(self, pin, n, brightness=1.0, auto_write=True):
+        """
+        initialize rainbow_leds
+
+        Args:
+            pin (microcontroller.Pin): The pin to output neopixel data on
+            n (int): The number of neopixels in the chain
+            brightness (float, optional): Brightness of the pixels between
+                0.0 and 1.0 where 1.0 is full brightness. Defaults to 1.0.
+            auto_write (bool, optional): True if the neopixels should
+                immediately change when set. If False, `show` must be called
+                explicitly.. Defaults to True.
+        """
+        self._rainbow_leds = neopixel.NeoPixel(
+            pin, n, brightness=brightness, auto_write=auto_write)
 
     def get_distance(self, pin: microcontroller.Pin, unit: Unit):
         """Gets the distance detected by ultrasound"""
