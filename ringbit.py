@@ -11,8 +11,6 @@ class Unit():
     cm = 1
     inch = 2
 
-
-
 class Ringbit():
     """Supports the Pico:ed ring:bit by ELECFREAKS"""
 
@@ -22,6 +20,7 @@ class Ringbit():
         self._right_pin = pwmio.PWMOut(right_pin, frequency=50, duty_cycle=0)
         self._left_servo = servo.ContinuousServo(self._left_pin)
         self._right_pin = servo.ContinuousServo(self._right_pin)
+        self._distance_last = 0
 
     def set_speed(self, left_speed:int, right_speed:int):
         """Set the Ring:bit Car speed"""
@@ -39,12 +38,20 @@ class Ringbit():
         _ultrasonic_pin.value = False
         _ultrasonic_pin.deinit()
         pulses = pulseio.PulseIn(pin)
-        while len(pulses) == 0:
-            pass
+        i = 0
+        while len(pulses) == 0 and i <= 5000:
+            i = i + 1
         pulses.pause()
-        distance = pulses.popleft() * 34 / 2 / 1000 + 7
+        if i > 5000:
+            distance = self._distance_last
+        else:
+            distance = pulses.popleft() * 34 / 2 / 1000 + 7
         pulses.clear()
         pulses.deinit()
+        if distance > 400:
+            distance = self._distance_last
+        else:
+            self._distance_last = distance
         if unit == Unit.cm:
             return distance
         elif unit == Unit.inch:
@@ -57,11 +64,11 @@ class Ringbit():
         _tracking_pin = analogio.AnalogIn(pin)
         _tracking_value = _tracking_pin.value
         _tracking_pin.deinit()
-        if _tracking_value < 9600:
+        if _tracking_value < 780:
             return 11
-        elif 9600 < _tracking_value < 15040:
+        elif 780 <= _tracking_value < 900:
             return 10
-        elif 15040 < _tracking_value < 19200:
+        elif 900 <= _tracking_value < 1200:
             return 1
-        elif 19200 < _tracking_value < 38400:
+        elif 1200 <= _tracking_value:
             return 0
